@@ -52,6 +52,7 @@ namespace OpenURL
 
         private void openInBrowser(String url)
         {
+            
             // Applications that we want to run, IE will be handled separately
             string[] apps = { "chrome", "firefox", "safari", "opera" };
 
@@ -104,6 +105,18 @@ namespace OpenURL
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             urlInput.Focus();
+        }
+
+        private void button2_Click(object sender, RoutedEventArgs e)
+        {
+            BrowserHandler handler = new BrowserHandler();
+            string test;
+
+            List<Browser> browsers = handler.getInstalledBrowsers();
+            for (int i = 0; i < browsers.Count; i++)
+            {
+                urlInput.Text += browsers[i].Name + " ";
+            }
         }
 
 

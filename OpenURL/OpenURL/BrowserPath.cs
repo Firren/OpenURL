@@ -38,8 +38,77 @@ namespace OpenURL
             return null;
         }
 
-        
+        public static Dictionary<string,string> find(String[] appName)
+        {
+            Dictionary<string,string> path = getInstallPathFromRegistry(appName);
+            string[] keys = path.Keys.ToArray();
+            foreach (string key in keys)
+            {
+                path[key] += "\\" + getApplicationExe(path[key], key);
+            }
+            return path;
 
+
+        }
+
+        private static Dictionary<string,string> getInstallPathFromRegistry(string[] pName)
+        {
+            Dictionary<string,string> installPath = new Dictionary<string,string>();
+                string displayName;
+                RegistryKey key;
+
+                // search in: CurrentUser
+                key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                foreach (String keyName in key.GetSubKeyNames())
+                {
+                    RegistryKey subkey = key.OpenSubKey(keyName);
+                    displayName = subkey.GetValue("DisplayName") as string;
+                    foreach (string name in pName)
+                    {
+                        if (displayName.ToLower().Contains(name))
+                        {
+                            string installLocation = subkey.GetValue("InstallLocation") as string;
+                            if (!installPath.ContainsKey(name))
+                            {
+                                installPath.Add(name, installLocation);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // search in: LocalMachine_32
+                key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                foreach (String keyName in key.GetSubKeyNames())
+                {
+                    RegistryKey subkey = key.OpenSubKey(keyName);
+                    displayName = subkey.GetValue("DisplayName") as string;
+                    foreach (string name in pName)
+                    {
+                        if (displayName != null && displayName.ToLower().Contains(name))
+                        {
+                            string installLocation = subkey.GetValue("InstallLocation") as string;
+                            if (!installPath.ContainsKey(name))
+                            {
+                                installPath.Add(name, installLocation);
+                                break;
+                            }
+                        }
+                    }
+                }
+                return installPath;
+                /*Dictionary<string,string> path = new Dictionary<string,string>();
+                foreach (string appName in pName)
+                {
+                    string pathToApp = getInstallPathFromRegistry(appName);
+                    if (pathToApp != null && !path.ContainsKey(appName) )
+                    {
+                        path.Add(appName,pathToApp);
+                    }
+                }
+                return path*/
+            
+        }
         private static string getInstallPathFromRegistry(string pName)
         {
             string displayName;
