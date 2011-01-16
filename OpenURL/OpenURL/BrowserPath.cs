@@ -29,15 +29,22 @@ namespace OpenURL
          **/
         public static string find(String appName)
         {
-            string path = getInstallPathFromRegistry(appName);
-            if (path != null)
+            string[] appsArray = { appName };
+            Dictionary<string,string> apps = find(appsArray);
+            string path = null;
+            if (apps.TryGetValue(appName, out path))
             {
-                path += "\\" + getApplicationExe(path, appName);
                 return path;
             }
             return null;
         }
-
+        /**
+         * <summary>
+         * Tries to find the location of browsers exe files by the browsers name
+         * </summary>
+         * <param name="appName">Browsers name</param>
+         * <returns>A dictionary with the browsers name as key and the path to the executable as the value</returns>
+         **/
         public static Dictionary<string,string> find(String[] appName)
         {
             Dictionary<string,string> path = getInstallPathFromRegistry(appName);
@@ -47,8 +54,6 @@ namespace OpenURL
                 path[key] += "\\" + getApplicationExe(path[key], key);
             }
             return path;
-
-
         }
 
         private static Dictionary<string,string> getInstallPathFromRegistry(string[] pName)
@@ -56,15 +61,26 @@ namespace OpenURL
             Dictionary<string,string> installPath = new Dictionary<string,string>();
                 string displayName;
                 RegistryKey key;
-
+                
                 // search in: CurrentUser
                 key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                foreach (String keyName in key.GetSubKeyNames())
+                foreach (string name in pName)
                 {
-                    RegistryKey subkey = key.OpenSubKey(keyName);
-                    displayName = subkey.GetValue("DisplayName") as string;
-                    foreach (string name in pName)
+                    if (name.Equals("iexplore"))
                     {
+                        if (!installPath.ContainsKey(name))
+                        {
+                            String installLocation = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                            installLocation += @"\Internet Explorer";
+                            installPath.Add(name, installLocation);
+                            continue;
+                        }
+                    }
+                    foreach (String keyName in key.GetSubKeyNames())
+                    {
+                        RegistryKey subkey = key.OpenSubKey(keyName);
+                        displayName = subkey.GetValue("DisplayName") as string;
+                    
                         if (displayName.ToLower().Contains(name))
                         {
                             string installLocation = subkey.GetValue("InstallLocation") as string;
@@ -74,17 +90,19 @@ namespace OpenURL
                                 break;
                             }
                         }
+                    
                     }
                 }
 
                 // search in: LocalMachine_32
                 key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                foreach (String keyName in key.GetSubKeyNames())
+                foreach (string name in pName)
                 {
-                    RegistryKey subkey = key.OpenSubKey(keyName);
-                    displayName = subkey.GetValue("DisplayName") as string;
-                    foreach (string name in pName)
+                    foreach (String keyName in key.GetSubKeyNames())
                     {
+                        RegistryKey subkey = key.OpenSubKey(keyName);
+                        displayName = subkey.GetValue("DisplayName") as string;
+                    
                         if (displayName != null && displayName.ToLower().Contains(name))
                         {
                             string installLocation = subkey.GetValue("InstallLocation") as string;
@@ -97,53 +115,8 @@ namespace OpenURL
                     }
                 }
                 return installPath;
-                /*Dictionary<string,string> path = new Dictionary<string,string>();
-                foreach (string appName in pName)
-                {
-                    string pathToApp = getInstallPathFromRegistry(appName);
-                    if (pathToApp != null && !path.ContainsKey(appName) )
-                    {
-                        path.Add(appName,pathToApp);
-                    }
-                }
-                return path*/
-            
         }
-        private static string getInstallPathFromRegistry(string pName)
-        {
-            string displayName;
-            RegistryKey key;
-
-            // search in: CurrentUser
-            key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            foreach (String keyName in key.GetSubKeyNames())
-            {
-                RegistryKey subkey = key.OpenSubKey(keyName);
-                displayName = subkey.GetValue("DisplayName") as string;
-
-                if (displayName.ToLower().Contains(pName))
-                {
-                    return subkey.GetValue("InstallLocation") as String;
-                }
-            }
-
-            // search in: LocalMachine_32
-            key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            foreach (String keyName in key.GetSubKeyNames())
-            {
-                RegistryKey subkey = key.OpenSubKey(keyName);
-                displayName = subkey.GetValue("DisplayName") as string;
-                if (displayName != null && displayName.ToLower().Contains(pName))
-                {
-                    return subkey.GetValue("InstallLocation") as String;
-                }
-            }
-
-
-
-            // NOT FOUND
-            return null;
-        }
+        
 
         private static string getApplicationExe(string path, string app)
         {
@@ -158,27 +131,28 @@ namespace OpenURL
             }
             return null;
         }
-
-
-        
+        // Not implemented
+        /**
+         * <summary>Find application by display name</summary>
+         **/
         private static string findByDisplayName(RegistryKey parentKey, string name)
         {
             //BrowserPath.findByDisplayName(Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\App Paths\"), "iexplore.exe");
             throw new NotImplementedException();
-            string[] nameList = parentKey.GetSubKeyNames();
-            for (int i = 0; i < nameList.Length; i++)
-            {
-                RegistryKey regKey = parentKey.OpenSubKey(nameList[i]);
-                try
-                {
-                    if (regKey.Name.ToString().ToLower().Contains(name))
-                    {
-                        return regKey.GetValue("").ToString();
-                    }
-                }
-                catch { }
-            }
-            return "";
+            //string[] nameList = parentKey.GetSubKeyNames();
+            //for (int i = 0; i < nameList.Length; i++)
+            //{
+            //    RegistryKey regKey = parentKey.OpenSubKey(nameList[i]);
+            //    try
+            //    {
+            //        if (regKey.Name.ToString().ToLower().Contains(name))
+            //        {
+            //            return regKey.GetValue("").ToString();
+            //        }
+            //    }
+            //    catch { }
+            //}
+            //return "";
         }
 
         

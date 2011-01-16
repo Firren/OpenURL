@@ -8,7 +8,7 @@ namespace OpenURL
     class BrowserHandler
     {
         // Supported browsers
-        private static string[] supportedBrowsers = { "chrome", "firefox", "safari", "opera" };
+        private static string[] supportedBrowsers = { "chrome", "firefox", "safari", "opera", "iexplore" };
 
         private List<Browser> installedBrowsers = new List<Browser>();
         
@@ -23,7 +23,9 @@ namespace OpenURL
         }
 
         
-        
+        /**
+         * <returns>All currently installed browsers</returns>
+         **/
         public List<Browser> getInstalledBrowsers()
         {
             return installedBrowsers;

@@ -30,7 +30,7 @@ namespace OpenURL
 
         private void button1_Click(object sender, RoutedEventArgs e)
         {
-            string url = trimURL(urlInput.Text);
+            string url = urlInput.Text;
             openInBrowser(url);
         }
 
@@ -38,68 +38,37 @@ namespace OpenURL
         {
             if (e.Key == Key.Enter)
             {
-                string url = trimURL(urlInput.Text);
+                string url = urlInput.Text;
                 openInBrowser(url);
             }
         }
 
-        private static string trimURL(string url)
-        {
-            char[] trimChars = { '\n', '\r' };
-            url = url.Trim(trimChars);
-            return url;
-        }
-
         private void openInBrowser(String url)
         {
-            
-            // Applications that we want to run, IE will be handled separately
-            string[] apps = { "chrome", "firefox", "safari", "opera" };
+            url = checkURL(url);
+            BrowserHandler handler = new BrowserHandler();
 
-
-            System.Diagnostics.Process[] proc = new System.Diagnostics.Process[apps.Length + 1];
-
-
-            /******************************* Run IE ************************************/
-            String path = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-            path = path + @"\Internet Explorer\iexplore.exe";
-            FileInfo file = new FileInfo(path);
-
-            if (file.Exists)
-            {
-                proc[apps.Length] = new System.Diagnostics.Process();
-                proc[apps.Length].StartInfo.FileName = path;
-                proc[apps.Length].StartInfo.Arguments = url;
-                try
-                {
-                    proc[proc.Length - 1].Start();
-                }
-                catch (Win32Exception ex)
-                {
-                }
-            }
-            /************************* Run everything else *****************************/
-
-            for (int i = 0; i < (apps.Length); i++)
+            List<Browser> browsers = handler.getInstalledBrowsers();
+            for (int i = 0; i < browsers.Count; i++)
             {
                 try
                 {
-                    // First we need to locate our applications exe files
-                    path = BrowserPath.find(apps[i]);
-                    if (path != null)
-                    {
-                        // Create process and run application
-                        proc[i] = new System.Diagnostics.Process();
-                        proc[i].StartInfo.FileName = path;
-                        proc[i].StartInfo.Arguments = url;
-                        proc[i].Start();
-                    }
+                    System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                    proc.StartInfo.FileName = browsers[i].PathToExe;
+                    proc.StartInfo.Arguments = url;
+                    proc.Start();
                 }
-                catch (Win32Exception ex)
+                catch
                 {
 
                 }
             }
+        }
+
+        private string checkURL(string url)
+        {
+            url = url.Trim();
+            return url.StartsWith(@"http://") ? url : String.Format("http://{0}", url);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -107,17 +76,7 @@ namespace OpenURL
             urlInput.Focus();
         }
 
-        private void button2_Click(object sender, RoutedEventArgs e)
-        {
-            BrowserHandler handler = new BrowserHandler();
-            string test;
-
-            List<Browser> browsers = handler.getInstalledBrowsers();
-            for (int i = 0; i < browsers.Count; i++)
-            {
-                urlInput.Text += browsers[i].Name + " ";
-            }
-        }
+        
 
 
     }
